@@ -1,11 +1,5 @@
-#ifndef TEST_H
-#define TEST_H
+#ifndef TESTS_H
+#define TESTS_H
 
-
-class test
-{
-public:
-    test();
-};
-
-#endif // TEST_H
+void testTablecell();
+#endif // TESTS_H
