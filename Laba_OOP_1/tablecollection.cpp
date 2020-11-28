@@ -1,4 +1,5 @@
 #include "tablecollection.h"
+#include "tablecellfunction.h"
 #include <iostream>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -38,8 +39,14 @@ TableCollection::TableCollection(const TableCollection &father) {
         collection[i] = new TableCell *[col];
         for (int j = 0; j <col; j++)
             if (father.getTableCel(i,j)) {
+
                 TableCell* cell = father.getTableCel(i,j);
-                collection[i][j] = new  TableCell (*cell);
+                if( cell->getType() == 0)
+                    collection[i][j] = new  TableCell (*cell);
+                else{
+                    TableCellFunction *cellFunc = (TableCellFunction*)cell;
+                    collection[i][j] = new TableCellFunction(*cellFunc);
+                }
             }
             else
                 collection[i][j] = nullptr;
@@ -66,11 +73,18 @@ TableCollection & TableCollection::operator=(const TableCollection &other) {
             collection[i] = new TableCell *[col];
             for (int j = 0; j <col; j++)
                 if (other.getTableCel(i,j)) {
+
                     TableCell* cell = other.getTableCel(i,j);
-                    collection[i][j] = new  TableCell (*cell);
+                    if( cell->getType() == 0)
+                        collection[i][j] = new  TableCell (*cell);
+                    else{
+                        TableCellFunction *cellFunc = (TableCellFunction*)cell;
+                        collection[i][j] = new TableCellFunction(*cellFunc);
+                    }
                 }
                 else
                     collection[i][j] = nullptr;
+
         }
         return *this;
     }
@@ -85,13 +99,18 @@ TableCell* TableCollection::getTableCel(const int x, const int y) const {
 }
 
 void TableCollection::setTableCel(const int x, const int y, TableCell *oneCell) {
-    if(x > 0 && y > 0 && x < row && y < col) {
+    if(x >= 0 && y >= 0 && x < row && y < col) {
         if(collection[x][y]) {
             delete collection[x][y];
             number--;
         }
         if(oneCell) {
+        if (oneCell->getType() == 0)
             collection[x][y] =new TableCell (*oneCell);
+        else {
+            TableCellFunction *cellFunc = (TableCellFunction*)oneCell;
+            collection[x][y] = new TableCellFunction(*cellFunc);
+        }
             number++;
         }
         else
@@ -135,7 +154,7 @@ float TableCollection::srMean(const int col_) const {
 }
 
 
-int TableCollection::getcount() const {
+int TableCollection::getCount() const {
     return number;
 }
 int TableCollection::getLength() const {
@@ -144,7 +163,6 @@ int TableCollection::getLength() const {
 int TableCollection::getWidth() const {
     return col;
 }
-
 
 void TableCollection::writeInFile(const QString &fileName) const {
     if(collection) {
@@ -163,12 +181,25 @@ void TableCollection::writeInFile(const QString &fileName) const {
                 if(collection[i][j]) {
                     lable.insert("String:", collection[i][j]->getString().c_str());
                     lable.insert("Int:", collection[i][j]->getInt());
-                    array_row.append(lable);
+                    if( collection[i][j]->getType() == 1)
+                    {
+                       lable.insert("Type", "TableCellFunction");
+                       TableCellFunction* lableFunc = (TableCellFunction*)collection[i][j];
+                       lable.insert("i_1",lableFunc->geti_1());
+                       lable.insert("j_1",lableFunc->getj_1());
+                       lable.insert("i_2",lableFunc->geti_2());
+                       lable.insert("j_2",lableFunc->getj_2());
+                    }
+                    else
+                    {
+                       lable.insert("Type", "TableCell");
+                    }
                 }
-                else{
-                    lable.insert("TableCell", "None");
+
+                else
+                    lable.insert("Type", "None");
                     array_row.append(lable);
-                }
+
 
             }
             arrayOfArray.append(array_row);
@@ -197,25 +228,28 @@ void  TableCollection::readFromFile(const QString &fileName) {
         this->col = firstObj["col"].toInt();
         TableCollection collect(row,col);
         collection = new TableCell **[row];
-        for(int i=0; i<row;i++){
+        for(int i=0; i<row;i++) {
             QJsonArray rowArray = arrayOfArray[i+1].toArray();
             collection[i] = new TableCell *[col];
-            for(int j=0;j<col;j++){
+            for(int j=0;j<col;j++) {
                 QJsonObject vall = rowArray[j].toObject();
-                QString type = vall["TableCell"].toString();
-                if (type != "None"){
-                    string collStrValue = vall["String:"].toString().toStdString();
-                    float collFloatValue = (float)vall["Int:"].toDouble();
-                    if( collStrValue ==""){
-                        TableCell one(collFloatValue);
-                        collection[i][j] = new TableCell (one);
-                        number++;
+                QString type = vall["Type"].toString();
+                if (type == "TableCell"){
+                    if ( type == "TableCell")
+                    {
+                        string collStrValue = vall["String:"].toString().toStdString();
+                        float collFloatValue = (float)vall["Int:"].toDouble();
+                        if( collStrValue ==""){
+                            TableCell one(collFloatValue);
+                            collection[i][j] = new TableCell (one);
+                            number++;
 
-                    }
-                    else{
-                        TableCell one(collStrValue);
-                        collection[i][j] = new TableCell (one);
-                        number++;
+                        }
+                        else{
+                            TableCell one(collStrValue);
+                            collection[i][j] = new TableCell (one);
+                            number++;
+                        }
                     }
                 }
                 else{
@@ -224,15 +258,57 @@ void  TableCollection::readFromFile(const QString &fileName) {
 
             }
         }
-        cout <<"OK";
+        for(int i=0; i<row;i++) {
+            QJsonArray rowArray = arrayOfArray[i+1].toArray();
+
+            for(int j=0;j<col;j++) {
+                QJsonObject vall = rowArray[j].toObject();
+                QString type = vall["Type"].toString();
+                    if ( type == "TableCellFunction")
+                    {
+                        string collStrValue = vall["String:"].toString().toStdString();
+                        float collFloatValue = (float)vall["Int:"].toDouble();
+                        int i_1 = vall["i_1"].toInt();
+                        int j_1 = vall["j_1"].toInt();
+                        int i_2 = vall["i_2"].toInt();
+                        int j_2 = vall["j_2"].toInt();
+
+                        if( collStrValue =="") {
+                            TableCellFunction  one((*this) ,*collection[i_1][j_1],*collection[i_2][j_2]);
+                            one.setint(collFloatValue);
+                            one.setIndex();
+                            one.setIndexi_1(i_1);
+                            one.setIndexi_2(i_2);
+                            one.setIndexj_1(j_1);
+                            one.setIndexj_2(j_2);
+                            collection[i][j] = new TableCellFunction (one);
+                            number++;
+
+                        }
+                        else{
+                            TableCellFunction  one((*this) ,*(this->getTableCel(i_1,j_1)),*(this->getTableCel(i_2,j_2)));
+                            one.setstr(collStrValue);
+                            collection[i][j] = new TableCellFunction (one);
+                            number++;
+                        }
+
+
+                    }
+
+                else{
+                }
+
+            }
+        }
     }
     else {
         throw "read error";
     }
 }
 
+
 TableCollection::~TableCollection() {
-    if(collection){
+    if(collection) {
         for(int i=0;i<row;i++) {
             for(int j=0; j<col;j++)
                 if(collection[i][j]) {
@@ -262,21 +338,29 @@ bool TableCollection::isequal(const TableCollection &table) {
                     return false;
                 if(firCell->getString() != secCell->getString())
                     return false;
+
             }
         }
     return true;
 }
+// TODO
 void printTableCollection(const TableCollection &table) {
     int row = table.getLength();
     int col = table.getWidth();
     for(int i=0;i<row;i++)
         for(int j=0;j<col;j++) {
-            if(table.getTableCel(i,j)){
+            if(table.getTableCel(i,j))
+            {
                 cout << "tablecell" <<"["<< i <<"]["<< j<< "] = ";
-                if(table.getTableCel(i,j)->getInt())
-                    cout << table.getTableCel(i,j)->getInt() << endl;
-                else
-                    cout << table.getTableCel(i,j)->getString() << endl;
+                if( table.getTableCel(i,j)->getType() == 0){
+                    if(table.getTableCel(i,j)->getInt())
+                        cout << table.getTableCel(i,j)->getInt() << endl;
+                    else
+                        cout << table.getTableCel(i,j)->getString() << endl;
+                }
+                else{
+                    std::cout << "Function";
+                }
             }
         }
 }

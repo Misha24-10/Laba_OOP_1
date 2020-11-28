@@ -1,6 +1,7 @@
 #include "test.h"
 #include "tablecell.h"
 #include "tablecollection.h"
+#include "tablecellfunction.h"
 #include <assert.h>
 #include <iostream>
 
@@ -16,6 +17,7 @@ void test_2() {
     assert(A1.getInt() == 100.0);
     assert(A1.getString() == "");
     cout <<"Done"<< endl;
+    TableCell A(111);
 }
 
 void test_3() {
@@ -78,6 +80,7 @@ void testIndexValue() {
     matr.setTableCel(2,2,&Film);
     assert(matr.getTableCel(2,2)->getInt()==Film.getInt() &&matr.getTableCel(2,2)->getString()==Film.getString());
     cout << "testIndexValue done"<< endl;
+
 }
 
 void testCountNumbers() {
@@ -86,7 +89,7 @@ void testCountNumbers() {
     TableCell Film2(20);
     matr.setTableCel(1,2,&Film);
     matr.setTableCel(2,2,&Film2);
-    assert(matr.getcount() == 2);
+    assert(matr.getCount() == 2);
     cout << "testCountNumbers done"<< endl;
 }
 
@@ -101,7 +104,21 @@ void testSumm() {
 }
 
 
-void testReadWrite(){
+void teas_inheritance(){
+    TableCollection matr(4,4);
+    TableCell Film(10);
+    TableCell Film2(20);
+    matr.setTableCel(1,2,&Film);
+    matr.setTableCel(2,2,&Film2);
+    TableCellFunction   mass(matr, *matr.getTableCel(1,2), *matr.getTableCel(2,2));
+    TableCellFunction   mass_2(matr, *matr.getTableCel(1,2), *matr.getTableCel(2,2));
+    matr.setTableCel(2,1,&mass);
+    matr.setTableCel(1,3,&Film2);
+    cout << mass.getSumm();
+}
+
+
+void testReadWrite() {
     TableCollection matr(10,10);
     TableCollection mass(5,5);
     TableCell Film(10);
@@ -112,13 +129,17 @@ void testReadWrite(){
     mass.setTableCel(2,2,&Film2);
     mass.setTableCel(3,2,&Film3);
     mass.setTableCel(4,2,&Film4);
+
+    TableCellFunction   mass_(mass, *mass.getTableCel(1,2), *mass.getTableCel(2,2));
     TableCollection A2(1,1);
-    mass.writeInFile("C:\\Users\\Misha\\Desktop\\C\\build-OOP_2-Desktop_Qt_5_14_2_MinGW_64_bit-Release\\name.txt");
-    A2.readFromFile("C:\\Users\\Misha\\Desktop\\C\\build-OOP_2-Desktop_Qt_5_14_2_MinGW_64_bit-Release\\name.txt");
+    mass_.setint(213);
+    mass.setTableCel(2,1,&mass_);
+    mass.writeInFile("C:\\Users\\Misha\\Desktop\\C\\build-OOP_2-Desktop_Qt_5_14_2_MinGW_64_bit-Release\\sss.txt");
+    A2.readFromFile("C:\\Users\\Misha\\Desktop\\C\\build-OOP_2-Desktop_Qt_5_14_2_MinGW_64_bit-Release\\sss.txt");
     A2.writeInFile("C:\\Users\\Misha\\Desktop\\C\\build-OOP_2-Desktop_Qt_5_14_2_MinGW_64_bit-Release\\ans.txt");
-    printTableCollection(mass);
+    cout << A2.isequal(mass) << endl;
     assert(mass.isequal(A2) == true);
-    cout << "testReadWrite done"<< endl;
+    cout << "\n testReadWrite done"<< endl;
 }
 
 void testTablecell() {
@@ -133,6 +154,9 @@ void testTablecell() {
     testIndexValue();
     testCountNumbers();
     testSumm();
+    cout << "-----------------------------------------------" << endl;
+
+    teas_inheritance();
     testReadWrite();
-    cout << "All tests are passed" << endl;
+    cout << "\nAll tests are passed" << endl;
 }

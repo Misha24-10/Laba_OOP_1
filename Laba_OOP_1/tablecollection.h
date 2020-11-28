@@ -18,7 +18,8 @@ public:
 
     int getLength() const;
     int getWidth() const;
-    int getcount() const;
+    int getCount() const;
+
 
     void writeInFile(const QString &fileName)const;
     void readFromFile(const QString &fileName);

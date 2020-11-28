@@ -1,8 +1,17 @@
 #include <QCoreApplication>
 #include "test.h"
+#include "tablecellfunction.h"
+#include "mainwindow.h"
 
-int main() {
+#include <QApplication>
 
+int main(int argc, char *argv[])
+{
     testTablecell();
-    return 0;
+
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.setWindowTitle("Laba Table");
+    w.show();
+    return a.exec();
 }

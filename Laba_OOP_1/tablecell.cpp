@@ -1,5 +1,6 @@
 #include "tablecell.h"
 #include <string>
+#include <iostream>
 
 TableCell::TableCell(const string text_box) {
     this->text_box = text_box;
@@ -32,10 +33,12 @@ TableCell::TableCell(const TableCell &other) {
     }
 }
 
+TableCell::~TableCell(){
 
+}
 
 string TableCell::getString() const {
-        return this->text_box;
+    return this->text_box;
 }
 
 float TableCell::getInt() const {
@@ -56,4 +59,14 @@ void TableCell::setstr(const string text_box_) {
     this->text_box = text_box_;
     this->is_float = false;
 
+}
+
+
+void TableCell::printParams(){
+    std::cout << this->getInt();
+    std::cout << this->getString();
+}
+
+int TableCell::getType() const{
+    return 0;
 }
